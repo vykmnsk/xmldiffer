@@ -14,11 +14,20 @@
 
 (defn detailed[diff]
   (let [ddiff (DetailedDiff. diff)]
-    (.overrideElementQualifier ddiff (new RecursiveElementNameAndTextQualifier))
+    ; (.overrideElementQualifier ddiff (new ElementNameQualifier))
     ddiff ))
 
 (defn unrecoverable[difference]
   (not (.isRecoverable difference)))
+
+(defn report-results[differences]
+  (with-open [wrtr (io/writer REPORT_NAME)]
+    (doseq [d differences]
+      (println d)
+      (.write wrtr (str d "\n"))
+      ))
+  (println "Check report file: " REPORT_NAME)
+  )
 
 (defn -main [& files]
   (if-not (= 2 (count files))
@@ -35,9 +44,8 @@
         differences (filter unrecoverable (seq differences-all)) ]
     (println "similar=" (.similar diff))
     (println "identical=" (.identical diff))
-    (with-open [wrtr (io/writer REPORT_NAME)]
-      (doseq [d differences]
-        (println d)
-        (.write wrtr (str d "\n"))
-        )))
+    (if (< 0 (count differences))
+        (report-results differences) )
+    (println "Done.")
+    )
   )
